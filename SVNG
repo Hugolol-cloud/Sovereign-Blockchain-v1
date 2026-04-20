@@ -1,0 +1,27 @@
+-- 1. Tabelle für die Blöcke (Block-Header)
+CREATE TABLE blocks (
+    block_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    block_hash TEXT NOT NULL UNIQUE,          -- Der Hash dieses Blocks
+    prev_hash TEXT NOT NULL,                 -- Verweis auf den vorherigen Block (die "Kette")
+    nonce INTEGER DEFAULT 0,                 -- Für Mining/Proof-of-Work (optional)
+    merkle_root TEXT NOT NULL,               -- Zusammenfassender Hash aller Transaktionen
+    block_index INTEGER NOT NULL UNIQUE      -- Fortlaufende Nummer (Genesis = 0)
+);
+
+-- 2. Tabelle für die Transaktionen (Body)
+CREATE TABLE transactions (
+    tx_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    block_index INTEGER NOT NULL,            -- Zuordnung zum Block
+    sender_address TEXT NOT NULL,            -- Absender (Wallet Address)
+    receiver_address TEXT NOT NULL,          -- Empfänger
+    amount REAL NOT NULL,                    -- Betrag in SVGN
+    ticker TEXT DEFAULT 'SVGN',
+    signature TEXT,                          -- Kryptographische Signatur
+    tx_hash TEXT NOT NULL UNIQUE,            -- Hash der einzelnen Transaktion
+    FOREIGN KEY (block_index) REFERENCES blocks(block_index)
+);
+
+-- 3. Initialisierung des Genesis Blocks (Block 0)
+INSERT INTO blocks (block_index, block_hash, prev_hash, merkle_root, nonce)
+VALUES (0, '00000000000000000000000000000000', '0', 'genesis_root', 0);
