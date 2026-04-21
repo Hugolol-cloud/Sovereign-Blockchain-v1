@@ -1,0 +1,58 @@
+# Schritt 1: Verzeichnis erstellen
+mkdir -p .github/workflows
+
+# Schritt 2: Datei erstellen und Inhalt einfügen
+cat > .github/workflows/build.yml << 'EOF'
+name: Build EXE
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and release Sovereign.exe
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install pyinstaller
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build exe with PyInstaller
+        run: |
+          pyinstaller --onefile --name Sovereign cli.py
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: build-${{ github.run_id }}
+          name: Sovereign build ${{ github.run_number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: build-${{ github.run_id }}
+          name: Sovereign.exe
+          files: dist/Sovereign.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+EOF
+
+# Schritt 3: Git-Befehle
+git add .github/workflows/build.yml
+git commit -m "Add GitHub Actions workflow: build Sovereign.exe"
+git push origin main
